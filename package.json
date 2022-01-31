@@ -1,0 +1,17 @@
+{
+  "name": "sur",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "brain.js": "^2.0.0-beta.4",
+    "cheerio": "^1.0.0-rc.10",
+    "needle": "^3.0.0",
+    "transliteration": "^2.2.0"
+  }
+}
