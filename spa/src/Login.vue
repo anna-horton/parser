@@ -51,34 +51,31 @@ export default {
       }
     }
   },
+  created() {
+    if (this.$store.getters.isLogin) this.$router.push('/admin')
+  },
   methods: {
-    handleSubmit(name) {
+    async handleSubmit(name) {
       this.isLoading = true
-      this.$refs[name].validate(async (valid) => {
-        if (valid) {
-          let resp = await this.$http.post('/api/login', {
-            ...this.formInline
-          })
-
-          if (resp && resp.status == 200 && resp.data.code == 200) {
-            this.$Notice.success({
-              title: 'Успешно'
-            })
-          } else {
-            this.$Notice.error({
-              title: 'Ошибка',
-              desc: resp.message || resp.data.message
-            })
-          }
-          console.log(resp)
-          // this.$Message.success('Success!');
-        } else {
-          this.$Message.error('Fail!');
-        }
-      })
-      setTimeout(() => {
+      let valid = await this.$refs[name].validate()
+      if (valid) {
+        let response = await this.$store.dispatch('login', {
+          ...this.formInline
+        })
         this.isLoading = false
-      }, 500)
+
+        if (response && response.code == 200) {
+          this.$Notice.success({
+            title: 'Успешно'
+          })
+          this.$router.push('/admin')
+        } else {
+          this.$Notice.error({
+            title: 'Ошибка',
+            desc: response.message
+          })
+        }
+      }
     }
   }
 }
