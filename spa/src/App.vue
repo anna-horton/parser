@@ -86,9 +86,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
 import './assets/styles/app.css'
 import { mapGetters } from 'vuex'
+import { ref } from 'vue'
 
 export default {
   name: 'App',
