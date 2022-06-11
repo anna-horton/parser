@@ -86,18 +86,17 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import './assets/styles/app.css'
 import { mapGetters } from 'vuex'
 import { ref } from 'vue'
 
-export default {
-  name: 'App',
-  created() {
+created(() => {
     this.$store.commit('loadUserInfo')
-  },
-  computed: mapGetters([
+})
+computed(() => {
+mapGetters([
       'isLogin', 'user'
   ])
-}
+})
 </script>
