@@ -29,7 +29,7 @@
           </Card>
         </Col>
         <Col span="8">
-          <Card bordered="false" class="props-field">
+          <Card :bordered="false" class="props-field">
             <span>Я понял это как </span>
             <div class="your-world"><a href="£">Солнце</a> </div>
             <List>

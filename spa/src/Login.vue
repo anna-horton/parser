@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'LoginPage',
@@ -51,8 +52,14 @@ export default {
       }
     }
   },
-  created() {
-    if (this.$store.getters.isLogin) this.$router.push('/admin')
+  computed: {
+    ...mapGetters(['isLogin'])
+  },
+  updated() {
+    console.log(this.isLogin)
+    if (this.isLogin) {
+        this.$store.getters.user.isAdmin ? this.$router.push('/admin') : this.$router.push('/dashboard')
+    }
   },
   methods: {
     async handleSubmit(name) {
@@ -68,7 +75,7 @@ export default {
           this.$Notice.success({
             title: 'Успешно'
           })
-          this.$router.push('/admin')
+          response.object.isAdmin ? this.$router.push('/admin') : this.$router.push('/dashboard')
         } else {
           this.$Notice.error({
             title: 'Ошибка',

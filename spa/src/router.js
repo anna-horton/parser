@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router'
-import HomePage from './Home.vue'
+import Landing from './Landing.vue'
 import AdminPage from './admin/Admin.vue'
 import Login from './Login.vue'
 import Logout from './Logout.vue'
@@ -7,10 +7,13 @@ import Reg from './Reg.vue'
 import CategoriesAdmin from './admin/Categories'
 import DactylAdmin from './admin/Dactyl'
 import Dashboard from './user/Dashboard'
+import Rules from './user/Rules'
+import Dactyl from './user/Dactyl'
+import Categories from './user/Categories'
 
 const routes = [
     {
-        path: '/', component: HomePage
+        path: '/', component: Landing
     },
     {
         path: '/admin', component: AdminPage
@@ -32,28 +35,40 @@ const routes = [
     },
     {
         path: '/dashboard', component: Dashboard
+    },
+    {
+        path: '/categories', component: Categories
+    },
+    {
+        path: '/rules', component: Rules
+    },
+    {
+        path: '/dactyl', component: Dactyl
     }
 ]
 
 
 const router = new VueRouter({
     routes,
+    mode: 'history'
 })
 
 router.beforeEach((to, from, next) => {
-    console.log(router.app.$store.getters.authInfo)
+    if (!['/login', '/reg', '/logout', '/'].includes(to.path)) {
+        let info = localStorage.getItem('authInfo')
+        if (info) info = JSON.parse(info);
 
-    if (['/login', '/reg', '/logout'].indexOf(to.path) !== -1) {
-        next()
-    } else {
-        if (router.app.$store.getters.isLogin) {
-            let token = getJWTExpireDate(router.app.$store.getters.token)
-            console.log(token)
-            next()
-        } else next('/login')
-        console.log(router.app.$store.getters.isLogin)
-        console.log(router.app.$store.getters.token)
-    }
+        if (info && info.token) {
+            let expiredTime = getJWTExpireDate(info.token)
+            new Date(expiredTime).getTime() < Date.now() ? next({
+                path: '/',
+                replace: true
+            }) : next()
+        } else next({
+            path: '/',
+            replace: true
+        })
+    } else next()
 })
 
 function getJWTExpireDate(jwtToken) {

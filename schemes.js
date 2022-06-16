@@ -9,7 +9,11 @@ const Admin = mongoose.model('Admin', {
 })
 
 const Users = mongoose.model('Users', {
-    email: String,
+    email: {
+        type: String, 
+        required: true,
+        unique: true
+    },
     password: String,
     name: String
 })
@@ -19,7 +23,7 @@ const Gestures = mongoose.model('Gestures', {
     entity: String,
     key: String,
     name: String,
-    status: Boolean,
+    status: String,
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category'

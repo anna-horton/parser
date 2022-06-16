@@ -1,9 +1,14 @@
 const jwt = require('jsonwebtoken')
 const express = require('express')
-const {Admin, Categories} = require("./schemes");
+const {Admin, Users} = require("./schemes");
 const router = express.Router()
 const bcrypt = require('bcrypt')
-
+const gestures = require('./controllers/gestures')
+const users = require('./controllers/users')
+const categories = require('./controllers/categories')
+const dactyl = require('./controllers/dactyl')
+const multer = require('multer')
+const upload = multer({ dest: './spa/public/assets/imgs/uploads' })
 
 router.post('/login', async (req, res) => {
     try {
@@ -34,9 +39,34 @@ router.post('/login', async (req, res) => {
                 code: 401,
                 message: 'Пароли не совпадают'
             }
-        } else throw{
-            code: 404,
-            message: 'Такого аккаунта не существует'
+        } else {
+            user = await Users.findOne({
+                email: req.body.email
+            })
+            if (user) {
+                if (bcrypt.compareSync(req.body.password, user.password)) {
+                    let token = await jwt.sign({
+                        ...user,
+                        isLogin: true
+                    }, process.env.JWT_SECRET, {
+                        expiresIn: 60*60
+                    })
+                    res.json({
+                        code: 200,
+                        object: {
+                            ...user._doc,
+                            isAdmin: false
+                        },
+                        token
+                    })
+                } else throw {
+                    code: 401,
+                    message: 'Пароли не совпадают'
+                }
+            } else throw{
+                code: 404,
+                message: 'Такого аккаунта не существует'
+            }
         }
 
         console.log(req.body)
@@ -45,6 +75,22 @@ router.post('/login', async (req, res) => {
     }
 
 })
+
+
+router.post('/upload', upload.single('file'), (req, res) => {
+    console.log(req.files)
+    if (req.file) {
+        res.json({
+            code: 0,
+            object: req.file
+        })
+    } else {
+        res.json({
+            code: 400,
+        })
+    }
+})
+router.post('/users/', users.create)
 
 router.use(async (req, res, next) => {
     try {
@@ -68,51 +114,6 @@ router.use(async (req, res, next) => {
 
 })
 
-router.get('/gestures', async (req, res) => {
-    try {
-        let gestures = await Gestures.find({
-            email: req.body.email,
-            author:req.user._id
-        })
-        res.json({
-            code: 0,
-            array: gestures
-        })
-    } catch (err) {
-        res.json(err).status(err.code)
-    }
-})
-
-router.get('/categories', async (req, res) => {
-    try {
-        let categories = await Categories.find({
-            email: req.body.email,
-            author:req.user._id
-        })
-        res.json({
-            code: 0,
-            array: categories
-        })
-    } catch (err) {
-        res.json(err).status(err.code)
-    }
-})
-
-router.get('/dactyl', async (req, res) => {
-    try {
-        let dactyl = await Dactyl.find({
-            email: req.body.email,
-            author:req.user._id
-        })
-        res.json({
-            code: 0,
-            array: dactyl
-        })
-    } catch (err) {
-        res.json(err).status(err.code)
-    }
-})
-
 
 router.get('/', (req, res) => {
     var decoded = jwt.decode(token);
@@ -123,5 +124,27 @@ router.get('/', (req, res) => {
     }
 })
 
+router.get('/users/:id', users.get)
+router.delete('/users/:id', users.remove)
+router.put('/users/:id', users.update)
+router.get('/users/', users.list)
+
+router.get('/categories/:id', categories.get)
+router.delete('/categories/:id', categories.remove)
+router.put('/categories/:id', categories.update)
+router.post('/categories/', categories.create)
+router.get('/categories/', categories.list)
+
+router.get('/dactyl/:id', dactyl.get)
+router.delete('/dactyl/:id', dactyl.remove)
+router.put('/dactyl/:id', dactyl.update)
+router.post('/dactyl/', dactyl.create)
+router.get('/dactyl/', dactyl.list)
+
+router.get('/gestures/:id', gestures.get)
+router.delete('/gestures/:id', gestures.remove)
+router.put('/gestures/:id', gestures.update)
+router.post('/gestures/', gestures.create)
+router.get('/gestures/', gestures.list)
 
 module.exports = router

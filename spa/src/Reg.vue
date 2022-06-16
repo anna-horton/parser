@@ -7,7 +7,7 @@
             <h1>Создать аккаунт</h1>
           </FormItem>
           <FormItem prop="email" label="Имя">
-            <Input type="email" v-model="formInline.email" placeholder="Введите Ваше имя">
+            <Input inva type="email" v-model="formInline.name" placeholder="Введите Ваше имя">
             </Input>
           </FormItem>
           <FormItem prop="email" label="Email">
@@ -19,14 +19,14 @@
             </Input>
           </FormItem>
           <FormItem prop="password" label="Пароль повторно">
-            <Input type="password" v-model="formInline.password" placeholder="Введите Ваш пароль ещё раз">
+            <Input type="password" v-model="formInline.rePassword" placeholder="Введите Ваш пароль ещё раз">
             </Input>
           </FormItem>
           <FormItem>
-            <Button :disabled="isLoading" type="primary" @click="handleSubmit('formInline')">ВОЙТИ</Button>
+            <Button :disabled="isLoading" type="primary" @click="handleSubmit('formInline')">ЗАРЕГИСТРИРОВАТЬСЯ</Button>
           </FormItem>
           <FormItem>
-            <span>Уже есть аккаунт? <a href="/reg">Войти</a></span>
+            <span>Уже есть аккаунт? <router-link to="/login">Войти</router-link></span>
           </FormItem>
         </Form>
       </Card>
@@ -36,12 +36,16 @@
 
 <script>
 
+import {required, email } from 'vuelidate'
+
 export default {
   name: 'RegPage',
   data: () => {
     return {
       isLoading: false,
       formInline: {
+        name: '',
+        rePassword: '',
         email: '',
         password: ''
       },
@@ -49,14 +53,22 @@ export default {
         email: [
           {
             required: true,
+
             message: 'Пожалуйста, заполните почту', trigger: 'blur'
           }
         ],
         password: [
           { required: true, message: 'Пожалуйста, введите пароль', trigger: 'blur' },
-          { type: 'string', min: 6, message: 'Пароль не может быть меньше 6 символов', trigger: 'blur' }
+          { type: 'string', min: 6, required: true, message: 'Пароль не может быть меньше 6 символов', trigger: 'blur' }
         ]
       }
+    }
+  },
+  validations () {
+    return {
+      name: { required }, // Matches this.firstName
+      email: { required, email }, // Matches this.lastName
+      password: { required, minLength: 8 }
     }
   },
   created() {
@@ -66,8 +78,8 @@ export default {
     async handleSubmit(name) {
       this.isLoading = true
       let valid = await this.$refs[name].validate()
-      if (valid) {
-        let response = await this.$store.dispatch('login', {
+      if (valid && this.$v) {
+        let response = await this.$store.dispatch('signup', {
           ...this.formInline
         })
         this.isLoading = false
@@ -76,7 +88,7 @@ export default {
           this.$Notice.success({
             title: 'Успешно'
           })
-          this.$router.push('/admin')
+          response.object.isAdmin ? this.$router.push('/admin') : this.$router.push('/dashboard')
         } else {
           this.$Notice.error({
             title: 'Ошибка',
