@@ -1,32 +1,48 @@
 <template>
-  <Content >
-    <h1>Административная панель <router-link class="logout" to="/logout">Выход</router-link></h1>
+  <Content>
+    <h1>
+      Административная панель
+      <router-link class="logout" to="/logout">Выход</router-link>
+    </h1>
     <div class="page-content">
       <Card :bordered="false">
-        <p slot="title">
-          Таблица категорий
-        </p>
+        <p slot="title">Таблица категорий</p>
         <Button slot="extra" @click="showModal = true">
           <Icon type="add-circle"></Icon>
           Добавить
         </Button>
-        <Table stripe :columns="columns" :data="data" no-data-text="Нет данных"></Table>
+        <Table
+          stripe
+          :columns="columns"
+          :data="categories"
+          no-data-text="Нет данных"
+        ></Table>
         <Modal
-            v-model="showModal"
-            title="Добавить категорию"
-            ok-text="добавить"
-            @on-ok="createGusture"
-            cancel-text="отмена"
+          v-model="showModal"
+          :title="isEdit ? 'Изменить категорию' : 'Добавить категорию'"
+          :ok-text="isEdit ? 'сохранить' : 'добавить'"
+          @on-cancel="isEdit = false"
+          @on-ok="updateOrCreateCategory"
+          cancel-text="отмена"
         >
           <div class="modal-custom">
-            <Form ref="gesturesRef" :model="categoriesForm" :rules="rules">
+            <Form ref="gesturesRef" :model="categoriesForm">
               <FormItem label="Наименование">
-                <Input v-model="categoriesForm.name" placeholder="Название жеста"></Input>
+                <Input
+                  v-model="categoriesForm.name"
+                  placeholder="Название жеста"
+                ></Input>
               </FormItem>
               <FormItem label="Родительская категорию">
-                <Select placeholder="Выберите категорию" v-model="categoriesForm.category">
-                  <Option value="Union">Союз</Option>
-                  <Option value="Pretext">Предлог</Option>
+                <Select
+                  placeholder="Выберите категорию"
+                  v-model="categoriesForm.parent"
+                >
+                  <template v-for="category in categories">
+                    <Option :key="category._id" :value="category._id">{{
+                      category.name
+                    }}</Option>
+                  </template>
                 </Select>
               </FormItem>
             </Form>
@@ -34,96 +50,133 @@
         </Modal>
       </Card>
     </div>
-
   </Content>
 </template>
 
 <script>
+import { mapActions, mapGetters } from "vuex";
 
 export default {
-  name: 'CategoriesAdminPage',
+  name: "CategoriesAdminPage",
   mounted() {
-    this.$store.dispatch('getGestures')
+    this.getCategories();
   },
   data() {
     return {
       showModal: false,
+      isEdit: false,
       columns: [
         {
-          title: 'Наименование',
-          key: 'name'
+          title: "Наименование",
+          key: "name",
         },
         {
-          title: 'Родительская категория',
-          key: 'category'
+          title: "Родительская категория",
+          key: "parent",
+          render: (h, { row }) => {
+            return h(
+              "Span",
+              {
+                props: {
+                  type: "md-checkmark-circle-outline",
+                  size: "14",
+                },
+              },
+              row.parent && row.parent.name ? row.parent.name : ""
+            );
+          },
         },
         {
-          title: 'Действия',
-          key: 'actions',
-          render: (h) => {
-            return h('div', [
-              h('Button', {
-                props: {
-                  type: 'text',
-                  size: 'small',
-                  icon: 'md-create'
-                }
-              }, 'Изменить'),
-              h('Button', {
-                props: {
-                  type: 'text',
-                  size: 'small',
-                  icon: 'md-trash'
-                }
-              }, 'Удалить')
+          title: "Действия",
+          key: "actions",
+          render: (h, { row }) => {
+            return h("div", [
+              h(
+                "Button",
+                {
+                  props: {
+                    type: "text",
+                    size: "small",
+                    icon: "md-create",
+                  },
+                  on: {
+                    click: () => {
+                      this.editCategory(row);
+                    },
+                  },
+                },
+                "Изменить"
+              ),
+              h(
+                "Button",
+                {
+                  props: {
+                    type: "text",
+                    size: "small",
+                    icon: "md-trash",
+                  },
+                  on: {
+                    click: () => {
+                      this.removeCategory(row._id);
+                      this.$Notice.success({
+                        title: "Успешно",
+                        desc: "Категория удалена",
+                      });
+                    },
+                  },
+                },
+                "Удалить"
+              ),
             ]);
-          }
-        },
-      ],
-      data: [
-        {
-          category: '',
-          name: 'Общие жесты',
-        },
-        {
-          category: 'Общие жесты',
-          name: 'Числительные',
+          },
         },
       ],
       isLoading: false,
       categoriesForm: {
-        entity: '',
-        category: '',
-        key: '',
-        name: '',
-        status: true,
-        file: null
+        parent: "",
+        name: "",
       },
-      rules: {
-        email: [
-          {
-            required: true,
-            message: 'Пожалуйста, заполните почту', trigger: 'blur'
-          }
-        ],
-        password: [
-          { required: true, message: 'Пожалуйста, введите пароль', trigger: 'blur' },
-          { type: 'string', min: 6, message: 'Пароль не может быть меньше 6 символов', trigger: 'blur' }
-        ]
-      }
-    }
+    };
+  },
+  computed: {
+    ...mapGetters(["categories"]),
   },
   methods: {
-    async createGusture() {
-      let resp = await this.$store.dispatch('createGestures', this.categoriesForm)
-      console.log(resp)
-    }
+    ...mapActions([
+      "getCategories",
+      "removeCategory",
+      "updateCategory",
+      "createCategory",
+    ]),
+    async updateOrCreateCategory() {
+      if (this.isEdit) {
+        let resp = await this.updateCategory(this.categoriesForm);
+        console.log(resp);
 
-  }
-}
+        this.$Notice.success({
+          title: "Успешно",
+          desc: "Категория обновлена",
+        });
+      } else {
+        console.log(this.categoriesForm);
+        let resp = await this.createCategory(this.categoriesForm);
+        console.log(resp);
+
+        this.$Notice.success({
+          title: "Успешно",
+          desc: "Категория добавлена",
+        });
+      }
+    },
+    async editCategory(object) {
+      this.isEdit = true;
+      this.categoriesForm = {
+        ...object,
+      };
+      this.showModal = true;
+    },
+  },
+};
 </script>
 
-
-<style>
-
-</style>
+<style></style>

@@ -21,3 +21,8 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+/spa/public/assets/imgs/uploads
+/spa/package-lock.json
+yarn.lock
+spa/yarn.lock
+.env

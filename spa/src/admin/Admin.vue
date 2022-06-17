@@ -34,8 +34,7 @@
               <FormItem>
                 <Upload
                   type="drag"
-                  v-model="gesturesForm.image"
-                  :format="['jpg', 'jpeg', 'png']"
+                  :format="['jpg', 'jpeg', 'png', 'mp4', 'gif']"
                   :on-remove="handleRemove"
                   :on-success="handleSuccess"
                   action="/api/upload"
@@ -71,6 +70,11 @@
                   placeholder="Выберите категорию"
                   v-model="gesturesForm.category"
                 >
+                  <template v-for="category in categories">
+                    <Option :key="category._id" :value="category._id">{{
+                      category.name
+                    }}</Option>
+                  </template>
                 </Select>
               </FormItem>
               <FormItem label="Ключ">
@@ -102,9 +106,10 @@ export default {
   name: "AdminPage",
   mounted() {
     this.$store.dispatch("getGestures");
+    this.$store.dispatch("getCategories");
   },
   computed: {
-    ...mapGetters(["gestures"]),
+    ...mapGetters(["gestures", "categories"]),
     gesturesFormated() {
       if (this.gestures) {
         return this.gestures.map((g) => {
@@ -317,6 +322,4 @@ export default {
 };
 </script>
 
-
-<style>
-</style>
+<style></style>
