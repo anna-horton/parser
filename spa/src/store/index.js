@@ -204,9 +204,16 @@ export default new Vuex.Store({
         return err;
       }
     },
-    getGestures: async (ctx) => {
+    getGestures: async (ctx, payload) => {
       try {
-        const response = await axios.get(`/api/gestures`, {
+        let qs = "";
+
+        if (payload) {
+          if (payload.name) qs += "name=" + payload.name;
+          if (payload.category) qs += "category=" + payload.category;
+        }
+
+        const response = await axios.get(`/api/gestures?` + qs, {
           headers: {
             authorization: "Basic " + ctx.getters.token,
           },
@@ -218,6 +225,8 @@ export default new Vuex.Store({
           };
         if (response.data.code !== 0) throw response.data;
         ctx.commit("setGestures", response.data.array);
+
+        return response.data.array;
       } catch (err) {
         console.log(err);
         return err;

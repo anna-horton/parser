@@ -8,7 +8,17 @@ const users = require("./controllers/users");
 const categories = require("./controllers/categories");
 const dactyl = require("./controllers/dactyl");
 const multer = require("multer");
-const upload = multer({ dest: "./spa/public/assets/imgs/uploads" });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./spa/public/assets/imgs/uploads");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix);
+  },
+});
+const upload = multer({ storage });
 
 router.post("/login", async (req, res) => {
   try {

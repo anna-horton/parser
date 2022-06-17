@@ -31,7 +31,9 @@
                 >Назад</Button
               >
             </h3>
-            <img class="image" :src="selectedG.image" />
+            <video class="image" controls="controls">
+              <source :src="selectedG.image" />
+            </video>
             <div
               class="flex"
               style="justify-content: space-between; margin-top: 20px"
@@ -95,7 +97,7 @@ export default {
   watch: {
     async selectedCategory() {
       const response = await axios.get(
-        `/api/gestures?categories=${this.selectedCategory._id}`,
+        `/api/gestures?category=${this.selectedCategory._id}`,
         {
           headers: {
             authorization: "Basic " + this.$store.getters.token,
@@ -104,6 +106,7 @@ export default {
       );
       if (response.data && response.data.array)
         this.$store.commit("setGestures", response.data.array);
+      this.selectedG = null;
       console.log(response);
     },
   },
